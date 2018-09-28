@@ -203,7 +203,7 @@ def main(argv):
 
 		headers = ["TIMESTAMP", "TASK_ID", "TASK_ID_HEX", "THREAD_NAME", \
 				   "MAP_STATUS", "ADDRESS", "NUM_BYTES"]
-		print(headers)
+		#print(headers)
 		for k,v in combined_data.items():
 #v.append(rss_consumed)
 			print(convertTimeStamp(k), v)
