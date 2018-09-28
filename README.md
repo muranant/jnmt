@@ -1,2 +1,2 @@
 # jnmt
-./strace2csv.py <filename> -p <pid>
+./strace4java.py <filename> -p <pid>
