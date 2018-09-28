@@ -190,15 +190,18 @@ def main(argv):
 		jstack_data = processJstack(pid)
 #rss_consumed = get_rss_from_pid(pid)
 		combined_data = collections.OrderedDict()
-		for timestamp, data in strace_data.items():
-			hex_pid = hex(data[0])
+		for timestamp, strace_value in strace_data.items():
+			hex_pid = hex(strace_value[0])
 			for j in jstack_data:
-				if j['nid'] == hex_pid:
-					if data[2] == "mmap":
-						combined_data[timestamp] = [data[0], j['nid'], j['id'], "Mapped", data[12], data[7]]
-					if data[2] == "munmap":
+				if strace_value[2] == "mmap":
+					if j['nid'] == hex_pid:
+						combined_data[timestamp] = [strace_value[0], j['nid'], j['id'], "Mapped", strace_value[12], strace_value[7]]
+					else:
+						combined_data[timestamp] = [strace_value[0], j['nid'], "Unknown", "Mapped", strace_value[12], strace_value[7]]
+				if strace_value[2] == "munmap":
+					if j['nid'] == hex_pid:
 						for ct, cd in combined_data.items():
-							if data[6] in cd and "Mapped" in cd:
+							if strace_value[6] in cd and "Mapped" in cd:
 								cd[3] = "UnMapped"
 
 		headers = ["TIMESTAMP", "TASK_ID", "TASK_ID_HEX", "THREAD_NAME", \
