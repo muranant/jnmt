@@ -190,19 +190,25 @@ def main(argv):
 		jstack_data = processJstack(pid)
 #rss_consumed = get_rss_from_pid(pid)
 		combined_data = collections.OrderedDict()
-		for timestamp, strace_value in strace_data.items():
+		total_mapped = 0
+		for timestamp, strace_value in strace_data.iteritems():
 			hex_pid = hex(strace_value[0])
-			for j in jstack_data:
-				if strace_value[2] == "mmap":
-					if j['nid'] == hex_pid:
-						combined_data[timestamp] = [strace_value[0], j['nid'], j['id'], "Mapped", strace_value[12], strace_value[7]]
-					else:
-						combined_data[timestamp] = [strace_value[0], j['nid'], "Unknown", "Mapped", strace_value[12], strace_value[7]]
-				if strace_value[2] == "munmap":
-					if j['nid'] == hex_pid:
-						for ct, cd in combined_data.items():
-							if strace_value[6] in cd and "Mapped" in cd:
-								cd[3] = "UnMapped"
+			if strace_value[2] == "mmap":
+				nid_added=0
+				for entry in jstack_data:
+					if entry['nid'] == hex_pid:
+						combined_data[timestamp] = [strace_value[0], entry['nid'], entry['id'], "Mapped", strace_value[12], strace_value[7]]
+						total_mapped += int(strace_value[7])
+						nid_added=1
+						break
+				if nid_added == 0:
+					combined_data[timestamp] = [strace_value[0], hex_pid, "Unknown", "Mapped", strace_value[12], strace_value[7]]
+					total_mapped += int(strace_value[7])
+			if strace_value[2] == "munmap":
+				for ct, cd in combined_data.items():
+					if strace_value[6] in cd and "Mapped" in cd:
+						cd[3] = "UnMapped"
+						total_mapped -= int(cd[5])
 
 		headers = ["TIMESTAMP", "TASK_ID", "TASK_ID_HEX", "THREAD_NAME", \
 				   "MAP_STATUS", "ADDRESS", "NUM_BYTES"]
@@ -210,6 +216,7 @@ def main(argv):
 		for k,v in combined_data.items():
 #v.append(rss_consumed)
 			print(convertTimeStamp(k), v)
+		print('Total Mapped Native Memory: ', total_mapped)
 	except IOError as e:
 		sys.stderr.write("%s: %s\n" % (os.path.basename(sys.argv[0]), e))
 		sys.exit(1)
