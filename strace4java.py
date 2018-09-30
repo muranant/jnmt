@@ -77,7 +77,7 @@ def convert2csv(input_file, output_file=None, separator=',', quote='"'):
 	strace_stream = StraceInputStream(f_in)
 	first = True
 
-	strace_dict = {}
+	strace_dict = collections.OrderedDict()
 
 	for entry in strace_stream:
 		
@@ -204,11 +204,12 @@ def main(argv):
 				if nid_added == 0:
 					combined_data[timestamp] = [strace_value[0], hex_pid, "Unknown", "Mapped", strace_value[12], strace_value[7]]
 					total_mapped += int(strace_value[7])
-			if strace_value[2] == "munmap":
+			if strace_value[2] == "munmap" or strace_value[2] == "madvise":
 				for ct, cd in combined_data.items():
-					if strace_value[6] in cd and "Mapped" in cd:
+					if strace_value[6] in cd and "Mapped" in cd and hex_pid in cd:
 						cd[3] = "UnMapped"
 						total_mapped -= int(cd[5])
+
 
 		headers = ["TIMESTAMP", "TASK_ID", "TASK_ID_HEX", "THREAD_NAME", \
 				   "MAP_STATUS", "ADDRESS", "NUM_BYTES"]
